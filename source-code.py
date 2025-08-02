@@ -1,4 +1,5 @@
 import json
+import os
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog as fd
@@ -6,6 +7,13 @@ from PIL import ImageTk, Image
 
 with open("champions.txt","r") as ch:
     champions = ch.read().splitlines()
+
+if not os.path.exists("save.json"):
+    with open("save.json","w") as sf:
+        saveFile = {}
+        for champion in champions:
+            saveFile[champion] = {"Played": False, "Score": [0, 0, 0], "TimesPlayed": 0}
+        json.dump(saveFile, sf)
 
 def openSaveFile():
     with open("save.json") as sf:
@@ -29,7 +37,9 @@ class App(object):
         self.varChampion.set(current[0])
         self.varTries.set(current[2])
         self.varScore.set(currentScore)
-        self.champion_image = ImageTk.PhotoImage(Image.open(f"Pictures/{current[0]}.jpg"))
+        self.champion_image = ImageTk.PhotoImage(
+            Image.open(f"Pictures/{current[0]}.jpg").resize((120, 120), Image.LANCZOS)
+        )
         self.create_button()
         self.create_labels()
         self.create_image()
@@ -51,6 +61,7 @@ class App(object):
         ttk.Button(self.master,text="Previous Champion",command=self.previousChampion).grid(column=1,row=5)
         ttk.Button(self.master,text="Add Score",command=self.addScore).grid(column=3,row=2,sticky=N)
         ttk.Button(self.master,text="Clear Champion Stats",command=self.clearChampionStats).grid(column=2,row=5,sticky=(S,E))
+        ttk.Button(self.master,text="Re-Create Save File",command=self.createSaveFile).grid(column=2,row=4,sticky=(S))
         ttk.Entry(self.master,textvariable=self.enterScore).grid(column=3,row=4,sticky=(W,E))
 
     def nextChampion(self):
@@ -74,7 +85,9 @@ class App(object):
         self.varChampion.set(current[0])
         self.varScore.set(currentScore)
         self.varTries.set(current[2])
-        self.champion_image = ImageTk.PhotoImage(Image.open(f"Pictures/{current[0]}.jpg"))
+        self.champion_image = ImageTk.PhotoImage(
+            Image.open(f"Pictures/{current[0]}.jpg").resize((120, 120), Image.LANCZOS)
+        )
         self.championPicLabel.configure(image=self.champion_image)
 
     def getCurrent(self):
@@ -114,9 +127,19 @@ class App(object):
         self.varTries.set("0")
         self.enterScore.set("")
 
+    def createSaveFile(self):
+        global saveFile
+        saveFile = {}
+        for champion in champions:
+            saveFile[champion] = {"Played": False, "Score": [0, 0, 0], "TimesPlayed": 0}
+        saveSaveFile()
+
 root = Tk()
 
 root.title("Setup, please wait...")
+
+root.iconbitmap("LoL_Icon.ico")
+root.resizable(False, False)
 
 if saveFile == {}:
     for champion in champions:

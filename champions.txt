@@ -159,6 +159,7 @@ Xin_Zhao
 Yasuo
 Yone
 Yorick
+Yunara
 Yuumi
 Zac
 Zed
