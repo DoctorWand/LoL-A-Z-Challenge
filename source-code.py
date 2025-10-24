@@ -30,6 +30,7 @@ openSaveFile()
 class App(object):
     def __init__(self, master, **kwargs):
         self.master = master
+        self.dark_mode = False
         self.varChampion = StringVar()
         self.varScore = StringVar()
         self.varTries = StringVar()
@@ -37,13 +38,54 @@ class App(object):
         self.varChampion.set(current[0])
         self.varTries.set(current[2])
         self.varScore.set(currentScore)
-        self.champion_image = ImageTk.PhotoImage(
-            Image.open(f"Pictures/{current[0]}.jpg").resize((120, 120), Image.LANCZOS)
-        )
+        self.champion_image = self.load_champion_image(current[0])
+        self.setup_style()
         self.create_button()
         self.create_labels()
         self.create_image()
     
+    def load_champion_image(self, champion_name):
+        try:
+            return ImageTk.PhotoImage(
+                Image.open(f"Pictures/{champion_name}.jpg").resize((120, 120), Image.LANCZOS)
+            )
+        except (FileNotFoundError, IOError):
+            # Fallback to default image if champion image not found
+            try:
+                return ImageTk.PhotoImage(
+                    Image.open("Pictures/0.jpg").resize((120, 120), Image.LANCZOS)
+                )
+            except (FileNotFoundError, IOError):
+                # If even the default image is missing, create a blank image
+                from PIL import Image as PILImage
+                blank_image = PILImage.new('RGB', (120, 120), color='gray')
+                return ImageTk.PhotoImage(blank_image)
+
+    def setup_style(self):
+        self.style = ttk.Style()
+        # Set initial theme
+        self.apply_theme()
+    
+    def apply_theme(self):
+        if self.dark_mode:
+            self.style.theme_use('clam')
+            self.style.configure('TLabel', background='#2b2b2b', foreground='white')
+            self.style.configure('TButton', background='#404040', foreground='white')
+            self.style.configure('TEntry', background='#404040', foreground='white', fieldbackground='#404040')
+            self.style.configure('TFrame', background='#2b2b2b')
+            self.style.map('TButton', background=[('active', '#555555'),('pressed', '#333333')])
+            self.style.map('TEntry', background=[('active', '#555555')])
+            self.master.master.configure(bg='#2b2b2b')
+        else:
+            self.style.theme_use('default')
+            self.style.map('TButton', background=[('active', '#e1e1e1'), ('pressed', '#d1d1d1')])
+            self.style.map('TEntry', background=[('active', '#f0f0f0')])
+            self.master.master.configure(bg='SystemButtonFace')
+    
+    def toggle_dark_mode(self):
+        self.dark_mode = not self.dark_mode
+        self.apply_theme()
+
     def create_image(self):
         self.championPicLabel = ttk.Label(self.master, image=self.champion_image)
         self.championPicLabel.grid(column=1, row=2)
@@ -62,6 +104,7 @@ class App(object):
         ttk.Button(self.master,text="Add Score",command=self.addScore).grid(column=3,row=2,sticky=N)
         ttk.Button(self.master,text="Clear Champion Stats",command=self.clearChampionStats).grid(column=2,row=5,sticky=(S,E))
         ttk.Button(self.master,text="Re-Create Save File",command=self.createSaveFile).grid(column=2,row=4,sticky=(S))
+        ttk.Button(self.master,text="Toggle Dark Mode",command=self.toggle_dark_mode).grid(column=1,row=4,sticky=(S))
         ttk.Entry(self.master,textvariable=self.enterScore).grid(column=3,row=4,sticky=(W,E))
 
     def nextChampion(self):
@@ -85,9 +128,7 @@ class App(object):
         self.varChampion.set(current[0])
         self.varScore.set(currentScore)
         self.varTries.set(current[2])
-        self.champion_image = ImageTk.PhotoImage(
-            Image.open(f"Pictures/{current[0]}.jpg").resize((120, 120), Image.LANCZOS)
-        )
+        self.champion_image = self.load_champion_image(current[0])
         self.championPicLabel.configure(image=self.champion_image)
 
     def getCurrent(self):
